@@ -1,0 +1,49 @@
+.env
+.venv/
+.claude/
+.idea/
+.agents/
+.codex/
+__pycache__/
+sessions/
+/data/
+graph/application/backend/.env
+graph/application/backend/logs/
+graph/application/frontend/node_modules/
+graph/application/frontend/dist/
+.runtime/
+/voice/
+logs/
+*.log
+*.pyc
+.pytest_cache/
+.ruff_cache/
+test-results/
+playwright-report/
+
+# Assets and datasets pending redistribution clearance
+/assets/
+/数字人/
+/graph/data/processed/
+/graph/application/frontend/adaptive-tutor.runtime*.png
+
+# Internal work notes and prior competition materials
+/2026-*.md
+/语音阶段*.md
+/伴学agent语音版.md
+/_app_data_*
+/自适应学习路径决策与伴学-项目计划书.md
+/自适应学习路径决策与伴学-项目计划书.pdf
+
+ # 授权待确认的数据和媒体
+  /assets/
+  /数字人/
+  /graph/data/processed/
+
+  # 内部工作记录和旧赛事材料
+  /2026-*.md
+  /语音阶段*.md
+  /伴学agent语音版.md
+  /_app_data_*
+  /自适应学习路径决策与伴学-项目计划书.md
+  /自适应学习路径决策与伴学-项目计划书.pdf

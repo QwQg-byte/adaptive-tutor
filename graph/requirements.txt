@@ -1,0 +1,39 @@
+# 数据采集
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+selenium>=4.15.0
+urllib3<2.0
+webdriver-manager>=4.0.0
+scrapy>=2.11.0
+
+# NLP处理
+spacy>=3.7.0
+transformers>=4.35.0
+torch>=2.1.0
+jieba>=0.42.1
+
+# 图数据库
+neo4j>=5.14.0
+py2neo>=2021.2.4
+
+# 数据分析
+pandas>=2.1.0
+numpy>=1.26.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# 可视化
+pyvis>=0.3.0
+networkx>=3.2.0
+
+# Web服务（可选）
+flask>=3.0.0
+fastapi>=0.104.0
+
+# 工具库
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+python-docx>=1.1.0
+openpyxl>=3.1.2
+pdfplumber>=0.9.0

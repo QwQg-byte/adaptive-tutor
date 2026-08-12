@@ -1,0 +1,3 @@
+# 合并项目统一从仓库根 requirements.txt 管理运行时依赖，避免 Tutor 与图谱后端
+# 分别锁定 FastAPI/Pydantic 后互相降级。
+-r ../../../requirements.txt

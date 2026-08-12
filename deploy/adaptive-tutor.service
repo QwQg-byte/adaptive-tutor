@@ -1,0 +1,20 @@
+[Unit]
+Description=Adaptive Tutor learner and agent service
+After=network-online.target knowledge-graph-api.service
+Wants=network-online.target
+Requires=knowledge-graph-api.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/apps/knowledge-graph
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/ubuntu/apps/knowledge-graph/.venv/bin/python web_server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

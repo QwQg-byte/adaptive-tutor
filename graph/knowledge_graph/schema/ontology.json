@@ -1,0 +1,801 @@
+{
+  "ontology": {
+    "name": "ProgrammingContestKnowledgeGraph",
+    "version": "1.0",
+    "description": "程序设计竞赛知识图谱本体定义",
+    "created_date": "2026-03-04",
+    "author": "邸安祺",
+    "instructor": "吉雪芸"
+  },
+  "entities": [
+    {
+      "name": "KnowledgePoint",
+      "label": "知识点",
+      "description": "程序设计竞赛中的核心知识点",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "知识点名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "知识点描述"
+        },
+        {
+          "name": "difficulty",
+          "type": "String",
+          "required": false,
+          "enum": ["入门", "基础", "进阶", "高级", "专家"],
+          "description": "掌握难度"
+        },
+        {
+          "name": "importance",
+          "type": "Float",
+          "required": false,
+          "range": [0, 1],
+          "default": 0.5,
+          "description": "重要程度 0-1"
+        },
+        {
+          "name": "learning_time",
+          "type": "Integer",
+          "required": false,
+          "unit": "hours",
+          "description": "预计学习时间(小时)"
+        },
+        {
+          "name": "frequency",
+          "type": "Integer",
+          "required": false,
+          "description": "在竞赛中出现的频率"
+        },
+        {
+          "name": "keywords",
+          "type": "List[String]",
+          "required": false,
+          "description": "关键词列表"
+        }
+      ]
+    },
+    {
+      "name": "Question",
+      "label": "题目",
+      "description": "程序设计竞赛题目",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "题目编号"
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "description": "题目名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "题目描述"
+        },
+        {
+          "name": "tags",
+          "type": "List[String]",
+          "required": false,
+          "description": "标签列表"
+        },
+        {
+          "name": "time_limit",
+          "type": "Integer",
+          "required": false,
+          "unit": "ms",
+          "description": "时间限制"
+        },
+        {
+          "name": "memory_limit",
+          "type": "Integer",
+          "required": false,
+          "unit": "MB",
+          "description": "内存限制"
+        },
+        {
+          "name": "pass_rate",
+          "type": "Float",
+          "required": false,
+          "range": [0, 1],
+          "description": "通过率"
+        },
+        {
+          "name": "url",
+          "type": "String",
+          "required": false,
+          "description": "题目链接"
+        },
+        {
+          "name": "source",
+          "type": "String",
+          "required": false,
+          "description": "题目来源平台"
+        },
+        {
+          "name": "create_date",
+          "type": "String",
+          "required": false,
+          "format": "YYYY-MM-DD",
+          "description": "创建日期"
+        }
+      ]
+    },
+    {
+      "name": "Algorithm",
+      "label": "算法",
+      "description": "程序设计竞赛中的算法",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "算法名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "算法描述"
+        },
+        {
+          "name": "time_complexity",
+          "type": "String",
+          "required": false,
+          "description": "时间复杂度"
+        },
+        {
+          "name": "space_complexity",
+          "type": "String",
+          "required": false,
+          "description": "空间复杂度"
+        },
+        {
+          "name": "difficulty",
+          "type": "String",
+          "required": false,
+          "enum": ["简单", "中等", "困难", "极难"],
+          "description": "算法难度"
+        },
+        {
+          "name": "category",
+          "type": "String",
+          "required": false,
+          "description": "算法分类"
+        }
+      ]
+    },
+    {
+      "name": "DataStructure",
+      "label": "数据结构",
+      "description": "程序设计竞赛中的数据结构",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "数据结构名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "数据结构描述"
+        },
+        {
+          "name": "time_complexity",
+          "type": "String",
+          "required": false,
+          "description": "时间复杂度"
+        },
+        {
+          "name": "space_complexity",
+          "type": "String",
+          "required": false,
+          "description": "空间复杂度"
+        },
+        {
+          "name": "difficulty",
+          "type": "String",
+          "required": false,
+          "enum": ["简单", "中等", "困难", "极难"],
+          "description": "数据结构难度"
+        }
+      ]
+    },
+    {
+      "name": "Category",
+      "label": "分类",
+      "description": "题目分类",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "分类名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "分类描述"
+        },
+        {
+          "name": "parent",
+          "type": "String",
+          "required": false,
+          "description": "父分类"
+        }
+      ]
+    },
+    {
+      "name": "Difficulty",
+      "label": "难度",
+      "description": "题目难度级别",
+      "attributes": [
+        {
+          "name": "level",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": ["入门", "简单", "中等", "困难", "极难"],
+          "description": "难度级别"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "难度描述"
+        },
+        {
+          "name": "value",
+          "type": "Integer",
+          "required": false,
+          "range": [1, 10],
+          "description": "难度数值"
+        }
+      ]
+    },
+    {
+      "name": "Method",
+      "label": "解题方法",
+      "description": "题目解题方法",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "方法名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "方法描述"
+        },
+        {
+          "name": "efficiency",
+          "type": "String",
+          "required": false,
+          "enum": ["低", "中", "高"],
+          "description": "方法效率"
+        }
+      ]
+    },
+    {
+      "name": "Concept",
+      "label": "概念",
+      "description": "基础概念",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "概念名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "概念描述"
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "required": false,
+          "enum": ["时间复杂度", "空间复杂度", "递归", "迭代", "分治", "贪心", "动态规划", "回溯", "其他"],
+          "description": "概念类型"
+        }
+      ]
+    },
+    {
+      "name": "Reference",
+      "label": "参考文献",
+      "description": "算法和数据结构相关的参考文献",
+      "attributes": [
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "description": "文献标题"
+        },
+        {
+          "name": "author",
+          "type": "String",
+          "required": false,
+          "description": "作者"
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "required": false,
+          "enum": ["书籍", "论文", "博客", "视频", "其他"],
+          "description": "文献类型"
+        },
+        {
+          "name": "url",
+          "type": "String",
+          "required": false,
+          "description": "文献链接"
+        },
+        {
+          "name": "year",
+          "type": "Integer",
+          "required": false,
+          "description": "出版年份"
+        }
+      ]
+    },
+    {
+      "name": "ProblemType",
+      "label": "题型",
+      "description": "题目类型",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "description": "题型名称"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": false,
+          "description": "题型描述"
+        },
+        {
+          "name": "input_format",
+          "type": "String",
+          "required": false,
+          "description": "输入格式描述"
+        },
+        {
+          "name": "output_format",
+          "type": "String",
+          "required": false,
+          "description": "输出格式描述"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "name": "BELONGS_TO",
+      "label": "属于",
+      "description": "题目属于某分类",
+      "from": "Question",
+      "to": "Category",
+      "direction": "OUTGOING",
+      "unique": true
+    },
+    {
+      "name": "HAS_DIFFICULTY",
+      "label": "有难度",
+      "description": "题目有难度级别",
+      "from": "Question",
+      "to": "Difficulty",
+      "direction": "OUTGOING",
+      "unique": true
+    },
+    {
+      "name": "REQUIRES",
+      "label": "需要",
+      "description": "题目需要知识点",
+      "from": "Question",
+      "to": "KnowledgePoint",
+      "direction": "OUTGOING",
+      "properties": {
+        "weight": {
+          "type": "Float",
+          "range": [0, 1],
+          "description": "权重"
+        }
+      }
+    },
+    {
+      "name": "USES_ALGORITHM",
+      "label": "使用算法",
+      "description": "题目使用算法",
+      "from": "Question",
+      "to": "Algorithm",
+      "direction": "OUTGOING",
+      "properties": {
+        "importance": {
+          "type": "String",
+          "enum": ["主要", "次要", "辅助"],
+          "description": "重要程度"
+        }
+      }
+    },
+    {
+      "name": "USES_STRUCTURE",
+      "label": "使用数据结构",
+      "description": "题目使用数据结构",
+      "from": "Question",
+      "to": "DataStructure",
+      "direction": "OUTGOING",
+      "properties": {
+        "importance": {
+          "type": "String",
+          "enum": ["主要", "次要", "辅助"],
+          "description": "重要程度"
+        }
+      }
+    },
+    {
+      "name": "PREREQUISITE",
+      "label": "前置知识",
+      "description": "知识点的前置关系",
+      "from": "KnowledgePoint",
+      "to": "KnowledgePoint",
+      "direction": "OUTGOING",
+      "properties": {
+        "strength": {
+          "type": "String",
+          "enum": ["强", "中", "弱"],
+          "description": "依赖强度"
+        }
+      }
+    },
+    {
+      "name": "PART_OF",
+      "label": "包含",
+      "description": "知识点包含关系",
+      "from": "KnowledgePoint",
+      "to": "KnowledgePoint",
+      "direction": "OUTGOING"
+    },
+    {
+      "name": "BASED_ON",
+      "label": "基于",
+      "description": "算法基于概念",
+      "from": "Algorithm",
+      "to": "Concept",
+      "direction": "OUTGOING"
+    },
+    {
+      "name": "SOLVED_BY",
+      "label": "由...解决",
+      "description": "题目由方法解决",
+      "from": "Question",
+      "to": "Method",
+      "direction": "OUTGOING",
+      "properties": {
+        "efficiency": {
+          "type": "String",
+          "enum": ["优", "良", "中", "差"],
+          "description": "效率评价"
+        }
+      }
+    },
+    {
+      "name": "COVERS",
+      "label": "覆盖",
+      "description": "文献覆盖知识点",
+      "from": "Reference",
+      "to": "KnowledgePoint",
+      "direction": "OUTGOING"
+    },
+    {
+      "name": "SIMILAR_TO",
+      "label": "相似于",
+      "description": "题目相似关系",
+      "from": "Question",
+      "to": "Question",
+      "direction": "OUTGOING",
+      "properties": {
+        "similarity": {
+          "type": "Float",
+          "range": [0, 1],
+          "description": "相似度"
+        },
+        "reason": {
+          "type": "String",
+          "description": "相似原因"
+        }
+      }
+    },
+    {
+      "name": "RECOMMENDED_FOR",
+      "label": "推荐用于",
+      "description": "知识点推荐用于学习某知识点",
+      "from": "KnowledgePoint",
+      "to": "KnowledgePoint",
+      "direction": "OUTGOING"
+    },
+    {
+      "name": "HAS_TYPE",
+      "label": "有题型",
+      "description": "题目有特定题型",
+      "from": "Question",
+      "to": "ProblemType",
+      "direction": "OUTGOING",
+      "unique": true
+    },
+    {
+      "name": "RELATED_TO",
+      "label": "相关于",
+      "description": "算法与数据结构相关",
+      "from": "Algorithm",
+      "to": "DataStructure",
+      "direction": "OUTGOING",
+      "properties": {
+        "description": {
+          "type": "String",
+          "description": "相关描述"
+        }
+      }
+    },
+    {
+      "name": "HAS_CONCEPT",
+      "label": "有概念",
+      "description": "知识点包含概念",
+      "from": "KnowledgePoint",
+      "to": "Concept",
+      "direction": "OUTGOING"
+    },
+    {
+      "name": "PRACTICE_IMPROVES",
+      "label": "练习提升",
+      "description": "练习题目提升知识点掌握",
+      "from": "Question",
+      "to": "KnowledgePoint",
+      "direction": "OUTGOING",
+      "properties": {
+        "improvement_score": {
+          "type": "Float",
+          "range": [0, 1],
+          "description": "提升分数"
+        }
+      }
+    }
+  ],
+  "constraints": [
+    {
+      "type": "UNIQUE",
+      "entity": "Question",
+      "property": "id",
+      "description": "题目ID必须唯一"
+    },
+    {
+      "type": "UNIQUE",
+      "entity": "KnowledgePoint",
+      "property": "name",
+      "description": "知识点名称必须唯一"
+    },
+    {
+      "type": "UNIQUE",
+      "entity": "Algorithm",
+      "property": "name",
+      "description": "算法名称必须唯一"
+    },
+    {
+      "type": "UNIQUE",
+      "entity": "DataStructure",
+      "property": "name",
+      "description": "数据结构名称必须唯一"
+    },
+    {
+      "type": "NOT_NULL",
+      "entity": "Question",
+      "property": "name",
+      "description": "题目名称不能为空"
+    },
+    {
+      "type": "NOT_NULL",
+      "entity": "KnowledgePoint",
+      "property": "name",
+      "description": "知识点名称不能为空"
+    },
+    {
+      "type": "RANGE",
+      "entity": "KnowledgePoint",
+      "property": "importance",
+      "range": [0, 1],
+      "description": "重要程度必须在0-1之间"
+    },
+    {
+      "type": "RANGE",
+      "entity": "Question",
+      "property": "pass_rate",
+      "range": [0, 1],
+      "description": "通过率必须在0-1之间"
+    }
+  ],
+  "examples": {
+    "entities": [
+      {
+        "type": "Question",
+        "data": {
+          "id": "MT1099",
+          "name": "数组去重",
+          "description": "给定一个包含重复元素的数组，去除重复元素",
+          "tags": ["数组", "去重", "哈希表"],
+          "time_limit": 1000,
+          "memory_limit": 256,
+          "pass_rate": 0.65,
+          "source": "码蹄集"
+        }
+      },
+      {
+        "type": "KnowledgePoint",
+        "data": {
+          "name": "动态规划",
+          "description": "动态规划是解决最优化问题的一种思想方法",
+          "difficulty": "进阶",
+          "importance": 0.9,
+          "learning_time": 20,
+          "frequency": 85,
+          "keywords": ["DP", "最优子结构", "重叠子问题"]
+        }
+      },
+      {
+        "type": "Algorithm",
+        "data": {
+          "name": "Dijkstra",
+          "description": "Dijkstra最短路径算法",
+          "time_complexity": "O((V+E)logV)",
+          "space_complexity": "O(V)",
+          "difficulty": "中等",
+          "category": "图算法"
+        }
+      },
+      {
+        "type": "DataStructure",
+        "data": {
+          "name": "优先队列",
+          "description": "基于堆实现的优先队列",
+          "time_complexity": "O(logn)",
+          "space_complexity": "O(n)",
+          "difficulty": "中等"
+        }
+      },
+      {
+        "type": "Category",
+        "data": {
+          "name": "图论",
+          "description": "图论相关题目",
+          "parent": "算法"
+        }
+      },
+      {
+        "type": "Difficulty",
+        "data": {
+          "level": "中等",
+          "description": "难度中等，需要一定算法基础",
+          "value": 5
+        }
+      },
+      {
+        "type": "Method",
+        "data": {
+          "name": "贪心算法",
+          "description": "在每一步选择当前最优解",
+          "efficiency": "高"
+        }
+      },
+      {
+        "type": "Concept",
+        "data": {
+          "name": "时间复杂度",
+          "description": "算法运行时间随输入规模增长的趋势",
+          "type": "时间复杂度"
+        }
+      },
+      {
+        "type": "Reference",
+        "data": {
+          "title": "算法导论",
+          "author": "Thomas H. Cormen",
+          "type": "书籍",
+          "year": 2009
+        }
+      },
+      {
+        "type": "ProblemType",
+        "data": {
+          "name": "最短路径问题",
+          "description": "寻找图中两点之间的最短路径",
+          "input_format": "第一行包含n个点和m条边",
+          "output_format": "输出最短路径长度"
+        }
+      }
+    ],
+    "relationships": [
+      {
+        "type": "BELONGS_TO",
+        "from": "MT1099",
+        "to": "数组"
+      },
+      {
+        "type": "HAS_DIFFICULTY",
+        "from": "MT1099",
+        "to": "中等"
+      },
+      {
+        "type": "REQUIRES",
+        "from": "MT1099",
+        "to": "哈希表",
+        "properties": {
+          "weight": 0.8
+        }
+      },
+      {
+        "type": "PREREQUISITE",
+        "from": "动态规划",
+        "to": "递归",
+        "properties": {
+          "strength": "强"
+        }
+      },
+      {
+        "type": "BASED_ON",
+        "from": "Dijkstra",
+        "to": "贪心"
+      },
+      {
+        "type": "RELATED_TO",
+        "from": "Dijkstra",
+        "to": "优先队列",
+        "properties": {
+          "description": "Dijkstra算法使用优先队列优化"
+        }
+      },
+      {
+        "type": "COVERS",
+        "from": "算法导论",
+        "to": "动态规划"
+      }
+    ]
+  },
+  "metadata": {
+    "total_entities": 10,
+    "total_relationships": 14,
+    "version_history": [
+      {
+        "version": "1.0",
+        "date": "2026-03-04",
+        "changes": "初始版本，定义核心实体和关系"
+      }
+    ]
+  }
+}

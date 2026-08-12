@@ -1,0 +1,45 @@
+export const SEARCH_PROPERTY_LABELS = Object.freeze({
+  id: 'ID',
+  node_id: '节点编号',
+  name: '名称',
+  label: '类型',
+  label_cn: '类型',
+  node_type: '知识类型',
+  section: '章节',
+  chapter_id: '章节编号',
+  chapter_order: '章节序号',
+  chapter_title: '章节名称',
+  course_id: '课程编号',
+  course_name: '课程名称',
+  order: '顺序',
+  title: '标题',
+  overview: '核心概述',
+  quote: '原文引述',
+  elaboration: '知识详解',
+  applications: '典型应用',
+  learning_tips: '学习建议',
+  questions: '思考题',
+  exercises: '实践练习',
+  tags: '标签',
+  related_section: '关联章节',
+  difficulty: '难度',
+  category: '分类',
+  category1: '一级分类',
+  category2: '二级分类',
+  pass_rate: '通过率',
+  url: '原题链接',
+  description: '题目描述',
+  input_format: '输入格式',
+  output_format: '输出格式',
+  sample_input: '样例输入',
+  sample_output: '样例输出',
+  remark: '备注',
+  source: '来源',
+  kp_count: '关联知识点数',
+  search_score: '相关度'
+})
+
+export function getSearchPropertyLabel(key) {
+  const normalized = String(key || '')
+  return SEARCH_PROPERTY_LABELS[normalized] || normalized
+}

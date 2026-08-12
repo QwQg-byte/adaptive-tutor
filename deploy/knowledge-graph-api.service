@@ -1,0 +1,20 @@
+[Unit]
+Description=Adaptive Tutor knowledge graph API
+After=network-online.target neo4j.service
+Wants=network-online.target
+Requires=neo4j.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/apps/knowledge-graph/graph/application/backend
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/ubuntu/apps/knowledge-graph/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

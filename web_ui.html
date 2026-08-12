@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自适应伴学 · Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --page-bg: #d8cdbc; --surface: #e3ddd2; --surface-soft: #e9e2d7;
+  --surface-muted: #c8bbab; --border: #b9ad9e; --text: #352d28; --muted: #75695e;
+  --accent: #4f719f; --accent-hover: #3e608d; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--page-bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+.digital-human-intro { position: fixed; inset: 0; z-index: 1000;
+  background: transparent; opacity: 1; pointer-events: none; transition: opacity .24s ease; overflow: hidden; }
+.digital-human-intro.is-done { opacity: 0; pointer-events: none; }
+.digital-human-frame { position: absolute; right: 16px; bottom: 16px;
+  width: min(25vw, calc(25vh * 16 / 9), 720px); aspect-ratio: 16 / 9; height: auto;
+  transform-origin: bottom right; transform: scale(1); opacity: 1;
+  will-change: left, top, transform, opacity; }
+.digital-human-frame.is-exiting {
+  animation: digital-human-exit .45s ease forwards; }
+@keyframes digital-human-exit {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(.92); opacity: 0; }
+}
+.digital-human-video { display: block; width: 100%; height: 100%;
+  object-fit: contain; object-position: center; border-radius: 10px; }
+.digital-human-play { display: grid; place-items: center; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); z-index: 1; pointer-events: auto;
+  width: 48px; height: 48px; padding: 0; border-radius: 50%; background: rgba(47, 107, 255, .92);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .35); font-size: 20px; }
+.digital-human-intro.is-playing .digital-human-play { display: none; }
+@media (max-width: 820px) {
+  .digital-human-frame { right: 10px; bottom: 10px; }
+}
+header { padding: 14px 22px; background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; }
+header h1 { font-size: 18px; font-weight: 600; }
+.header-actions { display: flex; align-items: center; gap: 14px; }
+.graph-link { color: var(--accent); font-size: 13px; text-decoration: none; }
+.graph-link:hover { color: #2f4e78; }
+.tag { font-size: 12px; color: #75695e; font-weight: 400; margin-left: 8px; }
+.who { font-size: 13px; color: #675c53; }
+.who input { background: var(--surface-soft); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; width: 130px; margin: 0 6px; }
+main { flex: 1; display: grid; grid-template-columns: 1fr 380px; gap: 0; overflow: hidden; }
+button { cursor: pointer; background: var(--accent); color: #fff; border: none;
+  border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+button:hover { background: var(--accent-hover); }
+button:disabled { cursor: not-allowed; opacity: .48; }
+button:disabled:hover { background: inherit; }
+#reset { background: #827970; }
+.chat { display: flex; flex-direction: column; padding: 16px; overflow: hidden; }
+.log { flex: 1; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 12px; }
+.bubble { max-width: 82%; padding: 10px 14px; border-radius: 12px; line-height: 1.6;
+  font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+.me { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
+.ai { align-self: flex-start; background: var(--surface-soft); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+.ai a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.ai a:hover { color: #2f4e78; }
+.meta { align-self: flex-start; font-size: 11px; color: var(--muted); margin-top: -6px; }
+.meta code { background: #e0d7cb; padding: 1px 6px; border-radius: 4px; color: #4e6d96; }
+.topicbar { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #675c53;
+  margin-top: 10px; flex-wrap: wrap; }
+.topicbar input { background: var(--surface-soft); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; width: 220px; }
+.topicbar .mut { font-size: 11px; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
+.quick button { background: var(--surface-muted); color: #453c35; font-size: 12px; padding: 5px 10px; }
+.quick button:hover { background: #b9ac9d; }
+.voice-row { min-height: 28px; display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; color: #675c53; font-size: 12px; }
+.voice-status { min-width: 0; overflow-wrap: anywhere; }
+.voice-status.idle { visibility: hidden; }
+.voice-status.recording { color: #a84843; font-weight: 600; }
+.voice-status.error { color: #9b5d2e; }
+.voice-preferences { display: none; align-items: center; flex: 0 0 auto; }
+.voice-speech-enabled .voice-preferences { display: flex; }
+.switch { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch-track { width: 34px; height: 20px; border-radius: 10px; background: #948a7e;
+  border: 1px solid #80756a; position: relative; transition: background .18s ease; }
+.switch-track::after { content: ""; position: absolute; width: 14px; height: 14px; top: 2px;
+  left: 2px; border-radius: 50%; background: #f5f1e9; transition: transform .18s ease; }
+.switch input:checked + .switch-track { background: var(--accent); border-color: #7290b6; }
+.switch input:checked + .switch-track::after { transform: translateX(14px); background: #fff; }
+.switch input:focus-visible + .switch-track { outline: 2px solid #6d8db7; outline-offset: 2px; }
+.input { display: flex; align-items: center; gap: 8px; }
+.input input { flex: 1; background: var(--surface-soft); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 10px 12px; font-size: 14px; min-width: 0; height: 42px; }
+.input #send { min-width: 64px; height: 42px; }
+.icon-button { width: 42px; height: 42px; padding: 0; display: inline-grid; place-items: center;
+  flex: 0 0 auto; font-size: 18px; line-height: 1; background: var(--surface-muted); color: #3e5f8d; }
+.icon-button:hover { background: #b9ac9d; }
+.icon-button.recording { background: #b43c47; color: #fff; }
+.icon-button.recording:hover { background: #c74a55; }
+.speech-controls { display: none; align-items: center; gap: 5px; margin-top: 7px; min-height: 30px; }
+.voice-speech-enabled .speech-controls { display: flex; }
+.speech-button { width: 30px; height: 30px; padding: 0; display: inline-grid; place-items: center;
+  background: transparent; color: var(--accent); border: 1px solid var(--border); font-size: 13px; }
+.speech-button:hover { background: #d1c6b8; color: #324c6c; }
+.speech-state { color: var(--muted); font-size: 11px; min-width: 0; overflow-wrap: anywhere; }
+.waiting-bubble { padding: 6px; min-width: 124px; }
+.chat-waiting-video { display: block; width: 112px; height: 63px; object-fit: contain;
+  border-radius: 7px; background: var(--surface-muted); }
+.waiting-fallback { display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 112px; height: 63px; color: var(--accent); }
+.waiting-fallback span { width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+  animation: waiting-dot 1.05s ease-in-out infinite; }
+.waiting-fallback span:nth-child(2) { animation-delay: .15s; }
+.waiting-fallback span:nth-child(3) { animation-delay: .3s; }
+.waiting-bubble.video-playing .waiting-fallback { display: none; }
+.waiting-bubble.video-error .chat-waiting-video { display: none; }
+.waiting-bubble.video-error .waiting-fallback { display: flex; }
+@keyframes waiting-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: .38; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+.side { background: #d3c7b7; border-left: 1px solid var(--border); padding: 16px;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.panel h2 { font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.mut { color: var(--muted); font-size: 12px; font-weight: 400; }
+.badge { font-size: 12px; background: #d5e5d5; color: #316443; padding: 2px 9px; border-radius: 10px; }
+.hide { display: none; }
+.profile { display: flex; flex-direction: column; gap: 8px; }
+.row { font-size: 13px; }
+.row .top { display: flex; justify-content: space-between; margin-bottom: 3px; }
+.bar { height: 7px; background: #c4b9aa; border-radius: 4px; overflow: hidden; }
+.fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+.fill.assessed_mastery { background: #4f9d69; }
+.fill.self_reported_mastery { background: #3a9d9a; }
+.fill.soft_confidence { background: #5b8def; }
+.fill.weak { background: #e6a23c; }
+.fill.untested { background: #c0c4cc; }
+.planctl { display: flex; gap: 6px; margin-bottom: 10px; }
+.planctl input { flex: 1; background: var(--surface-soft); border: 1px solid var(--border); color: var(--text);
+  border-radius: 6px; padding: 6px 8px; font-size: 13px; }
+.plan { display: flex; flex-direction: column; gap: 4px; }
+.step { font-size: 13px; padding: 6px 10px; border-radius: 6px; background: #e2d9cc;
+  border: 1px solid #c2b6a7; display: flex; align-items: center; gap: 8px; transition: all .4s; }
+.dropped { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.9; }
+.dropped span { display: inline-block; background: #e8e0d5; border: 1px solid #c7baaa;
+  color: #75695e; border-radius: 4px; padding: 1px 7px; margin: 2px 4px 0 0;
+  text-decoration: line-through; }
+.step.done { opacity: .45; text-decoration: line-through; border-color: #1c5a3a; }
+.step.target { border-color: #5576a5; background: #d9e1ec; font-weight: 600; }
+.step .idx { color: var(--muted); font-size: 11px; min-width: 20px; }
+.step-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.35; }
+.step-detail { color: #75695e; font-size: 11px; font-weight: 400; overflow-wrap: anywhere; }
+.flash { animation: flash 1s ease; }
+@keyframes flash { 0% { background: #1c5a3a; } 100% {} }
+@media (max-width: 820px) {
+  body { height: 100dvh; }
+  header { align-items: flex-start; gap: 10px; flex-wrap: wrap; padding: 12px 14px; }
+  .header-actions { width: 100%; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .who { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .who input { width: min(42vw, 160px); margin: 0; }
+  main { display: block; overflow-y: auto; }
+  .chat { min-height: calc(100dvh - 116px); padding: 12px; overflow: visible; }
+  .log { min-height: 280px; overflow-y: visible; }
+  .side { border-left: 0; border-top: 1px solid var(--border); overflow: visible; }
+  .bubble { max-width: 92%; }
+  .topicbar input { width: min(100%, 220px); }
+  .voice-row { align-items: flex-start; }
+}
+</style>
+</head>
+<body class="intro-active">
+<div id="digitalHumanIntro" class="digital-human-intro" aria-hidden="true">
+  <div id="digitalHumanFrame" class="digital-human-frame">
+    <video id="digitalHumanVideo" class="digital-human-video" playsinline preload="auto">
+      <source src="companion-digital-human.mp4" type="video/mp4">
+    </video>
+    <button id="digitalHumanPlay" class="digital-human-play" type="button" title="播放数字人动画" aria-label="播放数字人动画">▶</button>
+  </div>
+</div>
+<header>
+  <h1>自适应伴学智能体 <span class="tag">知识图谱 · Demo</span></h1>
+  <div class="header-actions">
+    <a id="graphLink" class="graph-link" href="#">知识图谱</a>
+    <div class="who">学生：<input id="student" value="demo_student"><button id="reset">重置会话</button></div>
+  </div>
+</header>
+<main>
+  <section class="chat">
+    <div id="log" class="log"></div>
+    <div class="topicbar">
+      主题：<input id="topic" value="动态规划" placeholder="任意知识点，如 快速排序 / 二分查找 / 图">
+      <span class="mut">（下面「规划/讲讲」按钮按此主题走；摸底/画像与主题无关）</span>
+    </div>
+    <div class="quick">
+      <button data-q="先给我做个摸底，测测我的水平">🧭 摸底诊断</button>
+      <button data-q="这题我会，做对了">✅ 这题做对了</button>
+      <button data-q="这题我不会，做错了">❌ 这题做错了</button>
+      <button data-tpl="我想学{topic}，帮我规划学习路径">🗺️ 规划路径</button>
+      <button data-tpl="讲讲{topic}吧，我想理解它">📖 讲讲这个</button>
+      <button data-q="这题我没思路，给点提示">💡 给点提示</button>
+      <button data-q="看看我现在的能力画像">📊 我的画像</button>
+    </div>
+    <div class="voice-row">
+      <span id="voiceStatus" class="voice-status idle" aria-live="polite">语音状态</span>
+      <div id="voicePreferences" class="voice-preferences">
+        <label class="switch" title="自动朗读由语音输入触发的回复">
+          <input id="autoSpeak" type="checkbox" aria-label="自动朗读语音输入触发的回复">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span>自动朗读</span>
+        </label>
+      </div>
+    </div>
+    <div class="input">
+      <button id="mic" class="icon-button" type="button" title="开始录音" aria-label="开始录音" hidden>🎙</button>
+      <input id="msg" placeholder="跟伴学 Agent 说点什么…" autocomplete="off">
+      <button id="send">发送</button>
+    </div>
+  </section>
+  <aside class="side">
+    <div class="panel">
+      <h2>能力画像 <span id="trackCount" class="mut"></span></h2>
+      <div id="profile" class="profile"><p class="mut">还没有学习记录，先做个摸底吧。</p></div>
+    </div>
+    <div class="panel">
+      <h2>学习路径 <span id="planBadge" class="badge hide"></span></h2>
+      <div class="planctl">
+        <input id="target" value="最大连续子序列和（动态规划）" placeholder="目标知识点">
+        <button id="doplan">生成/刷新</button>
+      </div>
+      <div id="plan" class="plan"><p class="mut">规划一个目标，看路径怎么随掌握变短。</p></div>
+    </div>
+  </aside>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const log = $('#log');
+const studentEl = $('#student');
+let lastMastered = new Set();
+let stateRevision = 0;
+const STUDENT_KEY = 'adaptive_tutor_student_id';
+const VOICE_AUTO_SPEAK_KEY = 'adaptive_tutor_voice_auto_speak';
+const VOICE_CONSENT_KEY = 'adaptive_tutor_voice_consent';
+const GRAPH_FRONTEND_URL = __GRAPH_FRONTEND_URL_JSON__;
+const micEl = $('#mic');
+const messageEl = $('#msg');
+const voiceStatusEl = $('#voiceStatus');
+const autoSpeakEl = $('#autoSpeak');
+const speechControls = new WeakMap();
+let voiceCapabilities = { enabled: false, transcription: false, speech: false, audio_types: [] };
+let voiceMimeType = '';
+let voiceState = 'idle';
+let recordingSession = null;
+let recordingAttempt = 0;
+let pendingVoiceTranscript = false;
+let chatBusy = false;
+let currentSpeech = null;
+const digitalHumanIntro = $('#digitalHumanIntro');
+const digitalHumanFrame = $('#digitalHumanFrame');
+const digitalHumanVideo = $('#digitalHumanVideo');
+const digitalHumanPlay = $('#digitalHumanPlay');
+let introFinished = false;
+let introExitStarted = false;
+let introPlaybackStarted = false;
+
+function revealTutorPage() {
+  if (introFinished) return;
+  introFinished = true;
+  digitalHumanVideo?.pause();
+  document.body.classList.remove('intro-active');
+  digitalHumanIntro?.classList.add('is-done');
+  window.setTimeout(() => digitalHumanIntro?.remove(), 280);
+}
+
+function beginDigitalHumanExit() {
+  if (introFinished || introExitStarted) return;
+  introExitStarted = true;
+  digitalHumanVideo?.pause();
+  digitalHumanFrame?.classList.add('is-exiting');
+  window.setTimeout(revealTutorPage, 1100);
+}
+
+function stopMediaTracks(stream) {
+  stream?.getTracks?.().forEach(track => {
+    if (track.readyState !== 'ended') track.stop();
+  });
+}
+
+function student() { return studentEl.value.trim() || 'demo_student'; }
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  })[char]);
+}
+function syncStudentIdentity() {
+  const sid = student();
+  localStorage.setItem(STUDENT_KEY, sid);
+  const graphUrl = new URL(GRAPH_FRONTEND_URL, window.location.origin);
+  graphUrl.searchParams.set('student', sid);
+  $('#graphLink').href = graphUrl.toString();
+}
+
+function appendLinkifiedText(container, text) {
+  const value = String(text ?? '');
+  const linkPattern = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"']+)/g;
+  let cursor = 0;
+  for (const match of value.matchAll(linkPattern)) {
+    container.append(document.createTextNode(value.slice(cursor, match.index)));
+    let url = match[2] || match[3];
+    let trailing = '';
+    if (!match[2]) {
+      const trimmed = url.replace(/[.,!?;:\uFF0C\u3002\uFF01\uFF1F\uFF1B\uFF1A)\]]+$/u, '');
+      trailing = url.slice(trimmed.length);
+      url = trimmed;
+    }
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.textContent = match[1] || url;
+    container.append(anchor);
+    if (trailing) container.append(document.createTextNode(trailing));
+    cursor = match.index + match[0].length;
+  }
+  container.append(document.createTextNode(value.slice(cursor)));
+}
+
+function addBubble(text, cls, linkify = false, enableSpeech = true) {
+  const d = document.createElement('div');
+  d.className = 'bubble ' + cls;
+  const content = document.createElement('div');
+  content.className = 'bubble-content';
+  if (linkify) appendLinkifiedText(content, text);
+  else content.textContent = text;
+  d.appendChild(content);
+  if (cls.includes('ai') && enableSpeech) addSpeechControls(d, text);
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+  return d;
+}
+
+function addWaitingBubble() {
+  const d = document.createElement('div');
+  d.className = 'bubble ai waiting-bubble';
+  d.setAttribute('role', 'status');
+  d.setAttribute('aria-label', '助手正在生成回复');
+
+  const fallback = document.createElement('span');
+  fallback.className = 'waiting-fallback';
+  fallback.setAttribute('aria-hidden', 'true');
+  fallback.innerHTML = '<span></span><span></span><span></span>';
+
+  const video = document.createElement('video');
+  video.className = 'chat-waiting-video';
+  video.src = new URL('chat-waiting.mp4', document.baseURI).href;
+  video.autoplay = true;
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.setAttribute('aria-hidden', 'true');
+  video.addEventListener('playing', () => d.classList.add('video-playing'), { once: true });
+  video.addEventListener('error', () => d.classList.add('video-error'), { once: true });
+  d.append(fallback, video);
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+  video.play().catch(() => d.classList.add('video-error'));
+  return d;
+}
+
+function removeWaitingBubble(bubble) {
+  const video = bubble?.querySelector('video');
+  video?.pause();
+  bubble?.remove();
+}
+
+function addMeta(html) {
+  const d = document.createElement('div');
+  d.className = 'meta';
+  d.innerHTML = html;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+function renderChatHistory(items) {
+  log.replaceChildren();
+  for (const item of items || []) {
+    if (item.role === 'user') {
+      addBubble(item.content, 'me');
+      continue;
+    }
+    if (item.role !== 'assistant') continue;
+    addBubble(item.content, 'ai', true);
+    const tools = item.tools || [];
+    if (tools.length) {
+      addMeta('工具: ' + tools.map(tool => `<code>${escapeHtml(tool)}</code>`).join(' '));
+    }
+  }
+}
+
+async function loadChatHistory() {
+  const expectedStudent = student();
+  const response = await fetch(`/api/chat/history?student=${encodeURIComponent(expectedStudent)}`);
+  if (!response.ok) throw new Error('聊天记录加载失败');
+  const data = await response.json();
+  if (student() === expectedStudent) renderChatHistory(data.items);
+}
+
+async function post(url, body) {
+  const r = await fetch(url, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    const error = new Error(data?.error?.message || '请求失败');
+    error.status = r.status;
+    error.data = data;
+    throw error;
+  }
+  return data;
+}
+
+function voiceRequestId(prefix = 'voice') {
+  const suffix = globalThis.crypto?.randomUUID?.()
+    || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}-${suffix}`;
+}
+
+function setVoiceState(state, message = '') {
+  voiceState = state;
+  voiceStatusEl.className = `voice-status ${state}`;
+  const defaults = {
+    idle: '语音状态',
+    recording: '正在录音 0:00 / 1:00',
+    transcribing: '正在转写…',
+    ready: '转写完成，请确认文字',
+    error: '语音操作失败'
+  };
+  voiceStatusEl.textContent = message || defaults[state] || defaults.idle;
+  updateInteractiveControls();
+}
+
+function updateInteractiveControls() {
+  const requesting = voiceState === 'requesting';
+  const recording = voiceState === 'recording';
+  const transcribing = voiceState === 'transcribing';
+  const interactionLocked = chatBusy || requesting || recording || transcribing;
+  $('#send').disabled = interactionLocked;
+  studentEl.disabled = interactionLocked;
+  $('#reset').disabled = interactionLocked;
+  document.querySelectorAll('.quick button').forEach(button => {
+    button.disabled = interactionLocked;
+  });
+  micEl.disabled = chatBusy || requesting || transcribing || !voiceMimeType;
+  micEl.classList.toggle('recording', recording);
+  micEl.textContent = recording ? '■' : '🎙';
+  micEl.title = recording ? '停止录音' : '开始录音';
+  micEl.setAttribute('aria-label', micEl.title);
+}
+
+function chooseVoiceMimeType(audioTypes) {
+  if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) return '';
+  const allowed = new Set(audioTypes || []);
+  const candidates = [
+    ['audio/webm;codecs=opus', 'audio/webm'],
+    ['audio/ogg;codecs=opus', 'audio/ogg'],
+    ['audio/webm', 'audio/webm'],
+    ['audio/ogg', 'audio/ogg'],
+    ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4'],
+    ['audio/mp4', 'audio/mp4'],
+    ['audio/wav', 'audio/wav']
+  ];
+  return candidates.find(([mime, base]) => (
+    allowed.has(base) && (!MediaRecorder.isTypeSupported || MediaRecorder.isTypeSupported(mime))
+  ))?.[0] || '';
+}
+
+async function loadVoiceCapabilities() {
+  try {
+    const response = await fetch('/api/voice/capabilities');
+    if (!response.ok) throw new Error('语音能力查询失败');
+    voiceCapabilities = await response.json();
+  } catch (_error) {
+    voiceCapabilities = { enabled: false, transcription: false, speech: false, audio_types: [] };
+  }
+  document.body.classList.toggle('voice-speech-enabled', Boolean(voiceCapabilities.speech));
+  micEl.hidden = !voiceCapabilities.transcription;
+  voiceMimeType = voiceCapabilities.transcription
+    ? chooseVoiceMimeType(voiceCapabilities.audio_types)
+    : '';
+  if (voiceCapabilities.transcription && !voiceMimeType) {
+    micEl.hidden = false;
+    setVoiceState('error', '当前浏览器不支持录音');
+  } else {
+    setVoiceState('idle');
+  }
+}
+
+function addSpeechControls(bubble, text) {
+  const controls = document.createElement('div');
+  controls.className = 'speech-controls';
+  const play = document.createElement('button');
+  play.type = 'button';
+  play.className = 'speech-button';
+  play.textContent = '▶';
+  play.title = '播放回复';
+  play.setAttribute('aria-label', '播放回复');
+  const stop = document.createElement('button');
+  stop.type = 'button';
+  stop.className = 'speech-button';
+  stop.textContent = '■';
+  stop.title = '停止播放';
+  stop.setAttribute('aria-label', '停止播放');
+  stop.disabled = true;
+  const state = document.createElement('span');
+  state.className = 'speech-state';
+  controls.append(play, stop, state);
+  bubble.appendChild(controls);
+  const entry = { bubble, play, stop, state, text };
+  speechControls.set(bubble, entry);
+  play.onclick = () => playSpeech(text, entry);
+  stop.onclick = () => stopSpeech();
+}
+
+function resetSpeechControls(entry, message = '') {
+  if (!entry) return;
+  entry.play.disabled = false;
+  entry.stop.disabled = true;
+  entry.state.textContent = message;
+}
+
+function stopSpeech() {
+  if (!currentSpeech) return;
+  const speech = currentSpeech;
+  currentSpeech = null;
+  speech.controller?.abort();
+  if (speech.audio) {
+    speech.audio.pause();
+    speech.audio.currentTime = 0;
+  }
+  if (speech.url) URL.revokeObjectURL(speech.url);
+  resetSpeechControls(speech.controls);
+}
+
+async function playSpeech(text, controls) {
+  if (!controls || !voiceCapabilities.speech) return;
+  stopSpeech();
+  const controller = new AbortController();
+  const speech = { controller, controls, audio: null, url: '' };
+  currentSpeech = speech;
+  controls.play.disabled = true;
+  controls.stop.disabled = false;
+  controls.state.textContent = '正在合成…';
+  try {
+    const response = await fetch('/api/voice/speech', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text, request_id: voiceRequestId('speech') }),
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data?.error?.message || '语音合成失败');
+    }
+    const blob = await response.blob();
+    if (currentSpeech !== speech) return;
+    speech.url = URL.createObjectURL(blob);
+    speech.audio = new Audio(speech.url);
+    speech.audio.onended = () => {
+      if (currentSpeech === speech) stopSpeech();
+    };
+    speech.audio.onerror = () => {
+      if (currentSpeech === speech) {
+        currentSpeech = null;
+        URL.revokeObjectURL(speech.url);
+        resetSpeechControls(controls, '播放失败');
+      }
+    };
+    await speech.audio.play();
+    if (currentSpeech === speech) controls.state.textContent = '正在播放';
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    if (currentSpeech === speech) currentSpeech = null;
+    if (speech.url) URL.revokeObjectURL(speech.url);
+    resetSpeechControls(controls, error.message || '播放失败');
+  }
+}
+
+function recordingExtension(mimeType) {
+  const mediaType = String(mimeType || '').split(';', 1)[0].toLowerCase();
+  return ({
+    'audio/webm': 'webm',
+    'audio/ogg': 'ogg',
+    'audio/mp4': 'mp4',
+    'audio/m4a': 'm4a',
+    'audio/x-m4a': 'm4a',
+    'audio/wav': 'wav'
+  })[mediaType] || 'webm';
+}
+
+function updateRecordingClock(session) {
+  if (recordingSession !== session || voiceState !== 'recording') return;
+  const elapsedSeconds = Math.min(60, Math.floor((Date.now() - session.startedAt) / 1000));
+  const seconds = String(elapsedSeconds % 60).padStart(2, '0');
+  setVoiceState('recording', `正在录音 ${Math.floor(elapsedSeconds / 60)}:${seconds} / 1:00`);
+  if (elapsedSeconds >= 60) stopRecording();
+}
+
+async function finishRecording(session) {
+  if (session.stopHandled) return;
+  session.stopHandled = true;
+  clearInterval(session.timer);
+  stopMediaTracks(session.stream);
+
+  if (session.discard) {
+    if (recordingSession === session) recordingSession = null;
+    setVoiceState('idle');
+    return;
+  }
+
+  const mimeType = session.recorder.mimeType || voiceMimeType;
+  const audio = new Blob(session.chunks, { type: mimeType });
+  if (!audio.size) {
+    if (recordingSession === session) recordingSession = null;
+    setVoiceState('error', '没有录到声音，请重试');
+    return;
+  }
+
+  setVoiceState('transcribing');
+  session.controller = new AbortController();
+  try {
+    const form = new FormData();
+    form.append('audio', audio, `recording.${recordingExtension(mimeType)}`);
+    form.append('request_id', voiceRequestId('transcription'));
+    const response = await fetch('/api/voice/transcriptions', {
+      method: 'POST',
+      body: form,
+      signal: session.controller.signal
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data?.error?.message || '语音转写失败');
+    if (session.discard || recordingSession !== session) return;
+    const transcript = String(data.text || '').trim();
+    if (!transcript) throw new Error('没有识别到文字，请重试');
+    messageEl.value = transcript;
+    pendingVoiceTranscript = true;
+    setVoiceState('ready');
+    messageEl.focus();
+  } catch (error) {
+    if (error.name === 'AbortError' || session.discard) {
+      if (recordingSession === session) setVoiceState('idle');
+    } else if (recordingSession === session) {
+      setVoiceState('error', error.message || '语音转写失败');
+    }
+  } finally {
+    if (recordingSession === session) recordingSession = null;
+    updateInteractiveControls();
+  }
+}
+
+async function startRecording() {
+  if (chatBusy || voiceState === 'requesting' || voiceState === 'transcribing' || !voiceMimeType) return;
+  if (voiceState === 'recording') {
+    stopRecording();
+    return;
+  }
+  if (localStorage.getItem(VOICE_CONSENT_KEY) !== 'true') {
+    const accepted = confirm('录音会发送到讯飞语音服务进行转写，是否继续？');
+    if (!accepted) return;
+    localStorage.setItem(VOICE_CONSENT_KEY, 'true');
+  }
+
+  stopSpeech();
+  pendingVoiceTranscript = false;
+  const attempt = ++recordingAttempt;
+  setVoiceState('requesting', '正在请求麦克风权限…');
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
+    if (attempt !== recordingAttempt || document.hidden) {
+      stopMediaTracks(stream);
+      setVoiceState('idle');
+      return;
+    }
+    const recorder = new MediaRecorder(stream, { mimeType: voiceMimeType });
+    const session = {
+      recorder,
+      stream,
+      chunks: [],
+      startedAt: Date.now(),
+      timer: null,
+      controller: null,
+      discard: false,
+      stopHandled: false
+    };
+    recorder.ondataavailable = event => {
+      if (event.data?.size) session.chunks.push(event.data);
+    };
+    recorder.onerror = () => {
+      session.discard = true;
+      session.stopHandled = true;
+      clearInterval(session.timer);
+      stopMediaTracks(session.stream);
+      if (recordingSession === session) recordingSession = null;
+      setVoiceState('error', '录音失败，请重试');
+    };
+    recorder.onstop = () => finishRecording(session);
+    recordingSession = session;
+    recorder.start(250);
+    setVoiceState('recording');
+    session.timer = setInterval(() => updateRecordingClock(session), 250);
+  } catch (error) {
+    stopMediaTracks(stream);
+    if (attempt !== recordingAttempt) return;
+    const message = error.name === 'NotAllowedError'
+      ? '未获得麦克风权限'
+      : error.name === 'NotFoundError'
+        ? '没有检测到麦克风'
+        : '无法启动录音，请重试';
+    setVoiceState('error', message);
+  }
+}
+
+function stopRecording(discard = false) {
+  if (discard) recordingAttempt += 1;
+  const session = recordingSession;
+  if (!session) {
+    if (discard && (voiceState === 'requesting' || voiceState === 'transcribing')) {
+      setVoiceState('idle');
+    }
+    return;
+  }
+  session.discard = session.discard || discard;
+  clearInterval(session.timer);
+  session.controller?.abort();
+  stopMediaTracks(session.stream);
+  if (discard) setVoiceState('idle');
+  else setVoiceState('transcribing');
+  if (session.recorder.state !== 'inactive') session.recorder.stop();
+  else finishRecording(session);
+}
+function renderProfile(prof) {
+  const th = 0.7;
+  const nodes = prof.nodes || [];
+  $('#trackCount').textContent = `${nodes.length} 个节点`;
+  const el = $('#profile');
+  if (!nodes.length) {
+    el.innerHTML = '<p class="mut">还没有学习记录，先做个摸底吧。</p>';
+    return;
+  }
+  el.innerHTML = nodes.slice(0, 20).map(n => {
+    const pct = Math.round(n.mastery * 100);
+    const cls = ({
+      assessed_mastery: 'assessed_mastery',
+      self_reported_mastery: 'self_reported_mastery',
+      soft_confidence: 'soft_confidence',
+      weak: 'weak',
+      untested: 'untested'
+    })[n.mastery_state] || 'untested';
+    const label = ({
+      assessed_mastery: '测评已掌握',
+      self_reported_mastery: '自报已掌握',
+      soft_confidence: '较可能掌握',
+      weak: '薄弱',
+      untested: '未测试'
+    })[n.mastery_state] || (n.mastery >= th ? '测评已掌握' : '薄弱');
+    return `<div class="row">
+      <div class="top"><span>${escapeHtml(n.node_name || n.node_id)} · ${label}</span><span class="mut">${pct}%</span></div>
+      <div class="bar"><div class="fill ${cls}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderPlan(data) {
+  const steps = data.steps || [];
+  const dropped = data.skipped || [];
+  const completed = data.completed_skipped || [];
+  const badge = $('#planBadge');
+  stateRevision = data.revision ?? stateRevision;
+  if (dropped.length) {
+    badge.textContent = `已跳过 ${dropped.length} 步`;
+    badge.classList.remove('hide');
+    badge.classList.add('flash');
+    setTimeout(() => badge.classList.remove('flash'), 1100);
+  } else {
+    badge.classList.add('hide');
+  }
+  if (!steps.length) {
+    $('#plan').innerHTML = data.already_mastered || data.already_completed
+      ? '<p class="mut">当前目标已完成或已掌握。</p>'
+      : '<p class="mut">没有待学习步骤。</p>';
+    return;
+  }
+  const stepsHtml = steps.map((s, i) => {
+    const done = s.progress_status === 'completed';
+    const cls = ['step', done ? 'done' : '', s.is_target ? 'target' : ''].filter(Boolean).join(' ');
+    const masteryLabel = ({
+      assessed_mastery: '测评已掌握',
+      self_reported_mastery: '自报已掌握',
+      soft_confidence: '较可能掌握',
+      weak: '薄弱',
+      untested: '未测试'
+    })[s.mastery_state] || '未测试';
+    const reviewIds = (s.review_tasks || []).map(task => task.question_id).filter(Boolean);
+    const review = reviewIds.length ? ` · 复习 ${reviewIds.map(escapeHtml).join('、')}` : '';
+    return `<div class="${cls}">
+      <span class="idx">${done ? '✓' : (i + 1)}</span>
+      <span class="step-body">
+        <span class="step-name">${escapeHtml(s.name)}</span>
+        <span class="step-detail">${masteryLabel}${review}</span>
+      </span>
+    </div>`;
+  }).join('');
+  const droppedHtml = dropped.length
+    ? `<div class="dropped">已跳过 ${dropped.length} 个步骤：`
+      + dropped.slice(0, 12).map(d => `<span>${escapeHtml(d.name)}</span>`).join('')
+      + (dropped.length > 12 ? ' …' : '') + '</div>'
+    : '';
+  const reviewHtml = data.review_before_plan?.length
+    ? `<div class="dropped">路径开始前待复习 ${data.review_before_plan.length} 道题</div>`
+    : '';
+  const completedHtml = completed.length
+    ? `<div class="dropped">当前目标已完成 ${completed.length} 步</div>`
+    : '';
+  $('#plan').innerHTML = reviewHtml + stepsHtml + droppedHtml + completedHtml;
+}
+
+async function loadPlan(retryOnConflict = true) {
+  const target = $('#target').value.trim();
+  if (!target) return;
+  try {
+    const data = await post(`/api/learners/${encodeURIComponent(student())}/plans`, {
+      target,
+      difficulty_preference: 'balanced',
+      max_depth: 6,
+      questions_per_step: 3,
+      expected_revision: stateRevision
+    });
+    renderPlan(data);
+  } catch (error) {
+    if (error.status === 409 && retryOnConflict) {
+      await loadState();
+      return loadPlan(false);
+    }
+    addMeta(escapeHtml(error.message));
+  }
+}
+
+async function loadState() {
+  syncStudentIdentity();
+  const sid = encodeURIComponent(student());
+  const [stateResponse, dashboardResponse] = await Promise.all([
+    fetch(`/api/learners/${sid}/state`),
+    fetch(`/api/learners/${sid}/dashboard`)
+  ]);
+  if (!stateResponse.ok) throw new Error('学习状态加载失败');
+  const state = await stateResponse.json();
+  stateRevision = state.revision;
+  renderProfile(state.profile);
+  lastMastered = new Set(state.profile?.mastered || []);
+  if (dashboardResponse.ok) {
+    const dashboard = await dashboardResponse.json();
+    $('#trackCount').textContent = `${dashboard.summary.mastered}/${dashboard.summary.total} 已掌握`;
+  }
+  return state;
+}
+
+async function sendMsg(text, fromVoice = false) {
+  if (!text || chatBusy || ['requesting', 'recording', 'transcribing'].includes(voiceState)) return;
+  const voiceTriggered = Boolean(fromVoice);
+  pendingVoiceTranscript = false;
+  stopSpeech();
+  chatBusy = true;
+  updateInteractiveControls();
+  addBubble(text, 'me');
+  messageEl.value = '';
+  if (voiceState === 'ready' || voiceState === 'error') setVoiceState('idle');
+  const thinking = addWaitingBubble();
+  try {
+    const data = await post('/api/chat', { student: student(), message: text });
+    removeWaitingBubble(thinking);
+    const bubble = addBubble(data.reply, 'ai', true);
+
+    const tools = data.tools || [];
+    if (tools.length) {
+      addMeta('工具: ' + tools.map(t => `<code>${escapeHtml(t)}</code>`).join(' '));
+    }
+
+    if (voiceTriggered && autoSpeakEl.checked) {
+      playSpeech(data.reply, speechControls.get(bubble));
+    }
+
+    const previousMastered = lastMastered;
+    const state = await loadState();
+    const newMastered = new Set(state.profile?.mastered || []);
+    const changed = [...newMastered].some(id => !previousMastered.has(id));
+    if (changed) {
+      lastMastered = newMastered;
+      loadPlan();
+    }
+  } catch (error) {
+    removeWaitingBubble(thinking);
+    addMeta(escapeHtml(error.message || '消息发送失败'));
+  } finally {
+    chatBusy = false;
+    updateInteractiveControls();
+  }
+}
+
+micEl.onclick = () => voiceState === 'recording' ? stopRecording() : startRecording();
+$('#send').onclick = () => sendMsg(messageEl.value.trim(), pendingVoiceTranscript);
+messageEl.onkeydown = e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg(messageEl.value.trim(), pendingVoiceTranscript);
+  }
+};
+autoSpeakEl.onchange = () => {
+  localStorage.setItem(VOICE_AUTO_SPEAK_KEY, String(autoSpeakEl.checked));
+};
+function topic() { return ($('#topic').value.trim() || '动态规划'); }
+document.querySelectorAll('.quick button').forEach(b => {
+  b.onclick = () => {
+    const tpl = b.dataset.tpl;
+    sendMsg(tpl ? tpl.replaceAll('{topic}', topic()) : b.dataset.q, false);
+  };
+});
+// 改主题时，顺带把路径面板目标对齐到该主题（方便直接看这个主题的路径）
+$('#topic').onchange = () => { $('#target').value = topic(); };
+$('#doplan').onclick = () => loadPlan();
+studentEl.onchange = async () => {
+  stopRecording(true);
+  stopSpeech();
+  pendingVoiceTranscript = false;
+  stateRevision = 0;
+  await Promise.all([loadState(), loadChatHistory()]);
+};
+$('#reset').onclick = async () => {
+  stopRecording(true);
+  stopSpeech();
+  pendingVoiceTranscript = false;
+  await fetch(`/api/reset?student=${encodeURIComponent(student())}`, { method: 'POST' });
+  log.innerHTML = ''; lastMastered = new Set();
+  addMeta('会话已重置（对话历史清除；画像数据保留）');
+};
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) return;
+  stopRecording(true);
+  stopSpeech();
+  pendingVoiceTranscript = false;
+});
+const initialStudent = new URLSearchParams(location.search).get('student')
+  || localStorage.getItem(STUDENT_KEY)
+  || 'demo_student';
+function startTutorApp() {
+  studentEl.value = initialStudent;
+  autoSpeakEl.checked = localStorage.getItem(VOICE_AUTO_SPEAK_KEY) !== 'false';
+  syncStudentIdentity();
+  Promise.all([loadState(), loadChatHistory(), loadVoiceCapabilities()])
+    .catch(error => addMeta(escapeHtml(error.message)));
+}
+
+function tryStartDigitalHuman() {
+  if (!digitalHumanVideo || introFinished || introPlaybackStarted) return;
+  introPlaybackStarted = true;
+  const seekToIntro = () => {
+    if (!Number.isFinite(digitalHumanVideo.duration)) return;
+    digitalHumanVideo.currentTime = Math.min(2, Math.max(0, digitalHumanVideo.duration - 0.05));
+  };
+  if (digitalHumanVideo.readyState >= 1) seekToIntro();
+  else digitalHumanVideo.addEventListener('loadedmetadata', seekToIntro, { once: true });
+  const playAttempt = digitalHumanVideo.play();
+  digitalHumanIntro?.classList.add('is-playing');
+  playAttempt?.catch(() => {
+    introPlaybackStarted = false;
+    digitalHumanIntro?.classList.remove('is-playing');
+  });
+}
+
+startTutorApp();
+if (!digitalHumanVideo || !digitalHumanFrame) {
+  revealTutorPage();
+} else {
+  digitalHumanFrame.addEventListener('animationend', event => {
+    if (event.animationName === 'digital-human-exit') revealTutorPage();
+  });
+  digitalHumanVideo.addEventListener('ended', beginDigitalHumanExit, { once: true });
+  digitalHumanVideo.addEventListener('error', beginDigitalHumanExit, { once: true });
+  digitalHumanPlay?.addEventListener('click', tryStartDigitalHuman);
+  tryStartDigitalHuman();
+}
+</script>
+</body>
+</html>
